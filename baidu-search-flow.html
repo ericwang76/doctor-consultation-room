@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>医生咨询室 - 百度搜索→内容验证场景 v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #cc785c;
+  --primary-active: #a9583e;
+  --medical-green: #5db8a6;
+  --medical-green-soft: #e8f5f2;
+  --ai-purple: #8b7ec8;
+  --ai-purple-soft: #f0eef8;
+  --ink: #141413;
+  --body: #3d3d3a;
+  --body-strong: #252523;
+  --muted: #6c6a64;
+  --muted-soft: #8e8b82;
+  --hairline: #e6dfd8;
+  --canvas: #faf9f5;
+  --surface-soft: #f5f0e8;
+  --surface-card: #efe9de;
+  --surface-dark: #181715;
+  --on-primary: #ffffff;
+  --on-dark: #faf9f5;
+  --success: #5db872;
+  --warning: #d4a017;
+  --error: #c64545;
+  --baidu-blue: #4e6ef2;
+  --baidu-blue-soft: #eef1fd;
+  
+  --sp-xxs: 4px;
+  --sp-xs: 8px;
+  --sp-sm: 12px;
+  --sp-md: 16px;
+  --sp-lg: 24px;
+  --sp-xl: 32px;
+  
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-pill: 9999px;
+  
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  background: #f0ebe3;
+  color: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ===== Layout ===== */
+.page-header {
+  text-align: center;
+  padding: 40px 20px 20px;
+}
+.page-header h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -0.5px;
+}
+.page-header p {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.flow-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 28px 0 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.flow-label::before, .flow-label::after {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: var(--hairline);
+}
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  color: var(--muted-soft);
+  font-size: 20px;
+}
+
+.screens-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px 60px;
+  gap: 0;
+}
+
+.screen-row {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+/* ===== Phone Frame ===== */
+.phone-frame {
+  width: 375px;
+  height: 800px;
+  border-radius: 40px;
+  border: 8px solid #1a1a1a;
+  overflow: hidden;
+  position: relative;
+  background: var(--canvas);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.status-bar {
+  height: 50px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 var(--sp-lg);
+  padding-bottom: 8px;
+  background: var(--canvas);
+  flex-shrink: 0;
+}
+.status-bar .time { font-size: 15px; font-weight: 600; color: var(--ink); }
+.status-bar .icons { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--ink); }
+
+/* ===== Top Nav ===== */
+.top-nav {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--canvas);
+  border-bottom: 1px solid var(--hairline);
+  flex-shrink: 0;
+}
+.top-nav .back-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink); font-size: 18px;
+}
+.top-nav .room-info { flex: 1; margin-left: var(--sp-sm); }
+.top-nav .room-name {
+  font-size: 16px; font-weight: 600; color: var(--ink); letter-spacing: -0.2px;
+}
+.top-nav .room-status {
+  font-size: 12px; color: var(--medical-green);
+  display: flex; align-items: center; gap: 4px;
+}
+.top-nav .room-status::before {
+  content: ''; width: 6px; height: 6px;
+  background: var(--medical-green); border-radius: 50%;
+}
+.top-nav .more-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 18px;
+}
+
+/* ===== Team Banner ===== */
+.team-banner {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--surface-soft);
+  gap: var(--sp-sm);
+  border-bottom: 1px solid var(--hairline);
+  flex-shrink: 0;
+}
+.team-avatars {
+  display: flex;
+}
+.team-avatars .avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--canvas);
+  margin-left: -6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: white;
+}
+.team-avatars .avatar:first-child { margin-left: 0; }
+.team-avatars .avatar.lead { background: var(--medical-green); }
+.team-avatars .avatar.member { background: #7bb3a8; }
+.team-avatars .avatar.ai { background: var(--ai-purple); font-size: 9px; }
+.team-info {
+  flex: 1; font-size: 12px; color: var(--muted); line-height: 1.4;
+}
+.team-info strong { color: var(--body-strong); font-weight: 500; }
+
+/* ===== Chat Area ===== */
+.chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-md);
+}
+
+.system-msg {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted-soft);
+  padding: var(--sp-xs) var(--sp-md);
+  background: var(--surface-soft);
+  border-radius: var(--r-pill);
+  align-self: center;
+  max-width: 85%;
+}
+
+.message {
+  display: flex;
+  gap: var(--sp-xs);
+  max-width: 88%;
+  align-items: flex-end;
+}
+.message.from-user { align-self: flex-end; flex-direction: row-reverse; }
+.message.from-ai { align-self: flex-start; }
+.message.from-doctor { align-self: flex-start; }
+
+.msg-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: white; flex-shrink: 0;
+}
+.msg-avatar.ai { background: var(--ai-purple); }
+.msg-avatar.doctor { background: var(--medical-green); }
+
+.msg-content { display: flex; flex-direction: column; gap: 2px; }
+.msg-sender { font-size: 11px; font-weight: 500; padding: 0 var(--sp-xs); }
+.msg-sender.ai { color: var(--ai-purple); }
+.msg-sender.doctor { color: var(--medical-green); }
+
+.msg-bubble {
+  padding: var(--sp-sm) var(--sp-md);
+  border-radius: var(--r-xl);
+  font-size: 14px; line-height: 1.55; color: var(--body);
+}
+.message.from-user .msg-bubble {
+  background: var(--primary); color: var(--on-primary);
+  border-bottom-right-radius: var(--r-sm);
+}
+.message.from-ai .msg-bubble {
+  background: var(--ai-purple-soft);
+  border: 1px solid rgba(139, 126, 200, 0.12);
+  border-bottom-left-radius: var(--r-sm);
+}
+.message.from-doctor .msg-bubble {
+  background: var(--medical-green-soft);
+  border: 1px solid rgba(93, 184, 166, 0.12);
+  border-bottom-left-radius: var(--r-sm);
+}
+.msg-time {
+  font-size: 10px; color: var(--muted-soft); padding: 0 var(--sp-xs);
+}
+.message.from-user .msg-time { text-align: right; }
+
+/* ===== Content Verification Card ===== */
+.verify-card {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  margin-top: var(--sp-xs);
+  overflow: hidden;
+}
+.verify-card-header {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-sm) var(--sp-md);
+  gap: var(--sp-xs);
+}
+.verify-card-header .verify-icon {
+  width: 20px; height: 20px;
+  background: var(--baidu-blue-soft);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+}
+.verify-card-header .verify-title {
+  flex: 1; font-size: 13px; font-weight: 500; color: var(--body-strong);
+}
+.verify-card-header .verify-toggle {
+  font-size: 12px; color: var(--muted-soft);
+}
+
+.verify-card-body {
+  padding: 0 var(--sp-md) var(--sp-sm);
+  font-size: 13px; color: var(--body); line-height: 1.6;
+  border-top: 1px solid var(--hairline);
+  padding-top: var(--sp-sm);
+}
+.verify-card-body .highlight {
+  background: rgba(204, 120, 92, 0.12);
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: var(--primary-active);
+}
+.verify-card-body .source-tag {
+  display: inline-block;
+  margin-top: var(--sp-xs);
+  font-size: 11px;
+  color: var(--muted-soft);
+  background: var(--surface-soft);
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+}
+
+/* ===== Doctor Recommend Card ===== */
+.recommend-card {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  padding: var(--sp-md);
+  margin-top: var(--sp-xs);
+}
+.recommend-card .rec-header {
+  font-size: 12px; font-weight: 500; color: var(--ai-purple);
+  margin-bottom: var(--sp-sm);
+  display: flex; align-items: center; gap: 4px;
+}
+.recommend-card .rec-doctor {
+  display: flex; align-items: center; gap: var(--sp-sm);
+  padding: var(--sp-sm);
+  background: var(--medical-green-soft);
+  border-radius: var(--r-md);
+  margin-bottom: var(--sp-sm);
+}
+.recommend-card .rec-avatar {
+  width: 36px; height: 36px;
+  background: var(--medical-green);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 14px; font-weight: 600;
+  flex-shrink: 0;
+}
+.recommend-card .rec-info { flex: 1; }
+.recommend-card .rec-name { font-size: 14px; font-weight: 500; color: var(--body-strong); }
+.recommend-card .rec-title { font-size: 12px; color: var(--muted); }
+.recommend-card .rec-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(93, 184, 166, 0.15);
+  border-radius: var(--r-pill);
+  font-size: 10px; color: var(--medical-green); font-weight: 500;
+  margin-top: 2px;
+}
+.recommend-card .rec-note {
+  font-size: 12px; color: var(--muted); line-height: 1.5;
+}
+
+/* ===== Questionnaire Card ===== */
+.questionnaire-card {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  padding: var(--sp-md);
+  margin-top: var(--sp-xs);
+}
+.questionnaire-card .q-header {
+  font-size: 12px; font-weight: 500; color: var(--ai-purple);
+  margin-bottom: var(--sp-sm);
+  display: flex; align-items: center; gap: 4px;
+}
+.questionnaire-card .q-progress {
+  display: flex; align-items: center; gap: var(--sp-xs);
+  margin-bottom: var(--sp-sm);
+}
+.questionnaire-card .q-progress-bar {
+  flex: 1; height: 3px; background: var(--hairline); border-radius: 2px;
+  overflow: hidden;
+}
+.questionnaire-card .q-progress-fill {
+  height: 100%; background: var(--ai-purple); border-radius: 2px;
+}
+.questionnaire-card .q-progress-text {
+  font-size: 11px; color: var(--muted-soft); white-space: nowrap;
+}
+.questionnaire-card .q-question {
+  font-size: 14px; color: var(--body-strong); line-height: 1.5;
+  margin-bottom: var(--sp-sm);
+}
+.questionnaire-card .q-options {
+  display: flex; flex-direction: column; gap: var(--sp-xs);
+}
+.questionnaire-card .q-option {
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--surface-soft);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  font-size: 13px; color: var(--body);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.questionnaire-card .q-option.selected {
+  background: var(--ai-purple-soft);
+  border-color: var(--ai-purple);
+  color: var(--body-strong);
+}
+.questionnaire-card .q-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: var(--sp-md);
+  padding-top: var(--sp-sm);
+  border-top: 1px solid var(--hairline);
+}
+.questionnaire-card .q-skip {
+  font-size: 12px; color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.questionnaire-card .q-next-btn {
+  padding: 7px 18px;
+  background: var(--ai-purple);
+  color: white;
+  border-radius: var(--r-pill);
+  font-size: 12px; font-weight: 500;
+  border: none; cursor: pointer;
+}
+
+/* ===== Skip Button (standalone) ===== */
+.skip-btn-row {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--sp-xs);
+}
+.skip-btn {
+  padding: 6px 16px;
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ===== Waiting State ===== */
+.waiting-card {
+  background: var(--canvas);
+  border: 1.5px dashed var(--medical-green);
+  border-radius: var(--r-lg);
+  padding: var(--sp-md);
+  margin-top: var(--sp-xs);
+  text-align: center;
+}
+.waiting-card .waiting-icon {
+  width: 40px; height: 40px;
+  margin: 0 auto var(--sp-sm);
+  border-radius: 50%;
+  background: var(--medical-green-soft);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  animation: pulse-ring 2s infinite;
+}
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(93, 184, 166, 0.3); }
+  70% { box-shadow: 0 0 0 8px rgba(93, 184, 166, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(93, 184, 166, 0); }
+}
+.waiting-card .waiting-title {
+  font-size: 14px; font-weight: 500; color: var(--body-strong);
+  margin-bottom: 4px;
+}
+.waiting-card .waiting-desc {
+  font-size: 12px; color: var(--muted); line-height: 1.5;
+}
+.waiting-card .waiting-progress {
+  margin-top: var(--sp-sm);
+  display: flex; align-items: center; gap: var(--sp-xs);
+  justify-content: center;
+}
+.waiting-card .progress-bar {
+  width: 120px; height: 3px;
+  background: var(--hairline); border-radius: 2px;
+  overflow: hidden;
+}
+.waiting-card .progress-fill {
+  height: 100%; width: 60%;
+  background: var(--medical-green);
+  border-radius: 2px;
+  animation: progress-move 2s ease-in-out infinite;
+}
+@keyframes progress-move {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+.waiting-card .progress-text {
+  font-size: 11px; color: var(--muted-soft);
+}
+
+/* ===== Verified Badge ===== */
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: var(--medical-green-soft);
+  border: 1px solid rgba(93, 184, 166, 0.2);
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--medical-green);
+  margin-bottom: var(--sp-xs);
+}
+
+/* ===== Doctor Response Card ===== */
+.doctor-response-card {
+  background: linear-gradient(135deg, var(--medical-green-soft) 0%, #f0faf7 100%);
+  border: 1px solid rgba(93, 184, 166, 0.2);
+  border-radius: var(--r-lg);
+  padding: var(--sp-md);
+  margin-top: var(--sp-xs);
+}
+.doctor-response-card .dr-header {
+  display: flex; align-items: center; gap: var(--sp-xs);
+  margin-bottom: var(--sp-sm);
+  padding-bottom: var(--sp-sm);
+  border-bottom: 1px solid rgba(93, 184, 166, 0.15);
+}
+.doctor-response-card .dr-avatar {
+  width: 32px; height: 32px;
+  background: var(--medical-green);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 13px; font-weight: 600;
+}
+.doctor-response-card .dr-name {
+  font-size: 13px; font-weight: 500; color: var(--body-strong);
+}
+.doctor-response-card .dr-title {
+  font-size: 11px; color: var(--muted);
+}
+.doctor-response-card .dr-content {
+  font-size: 13px; line-height: 1.7; color: var(--body);
+}
+.doctor-response-card .dr-content .key-point {
+  display: block;
+  padding: var(--sp-xs) var(--sp-sm);
+  background: rgba(255,255,255,0.7);
+  border-left: 3px solid var(--medical-green);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  margin: var(--sp-xs) 0;
+  font-size: 13px;
+}
+.doctor-response-card .dr-footer {
+  margin-top: var(--sp-sm);
+  padding-top: var(--sp-sm);
+  border-top: 1px solid rgba(93, 184, 166, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.doctor-response-card .dr-actions {
+  display: flex; gap: var(--sp-xs);
+}
+.doctor-response-card .dr-action-btn {
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  border: 1px solid var(--hairline);
+  background: white;
+  color: var(--body);
+  cursor: pointer;
+}
+.doctor-response-card .dr-action-btn.primary {
+  background: var(--medical-green);
+  border-color: var(--medical-green);
+  color: white;
+}
+
+/* ===== Input Area ===== */
+.input-area {
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--canvas);
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-xs);
+  flex-shrink: 0;
+}
+.input-field {
+  flex: 1;
+  background: var(--surface-soft);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-xl);
+  padding: var(--sp-sm) var(--sp-md);
+  font-size: 14px; color: var(--body);
+  min-height: 40px;
+  resize: none; outline: none;
+  font-family: var(--font-body);
+}
+.input-field::placeholder { color: var(--muted-soft); }
+.input-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; border: none; cursor: pointer;
+}
+.input-btn.send { background: var(--primary); color: var(--on-primary); }
+.input-btn.attach { background: transparent; color: var(--muted); }
+
+.home-indicator {
+  height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--canvas); flex-shrink: 0;
+}
+.home-indicator .bar {
+  width: 134px; height: 5px;
+  background: var(--ink); border-radius: 3px; opacity: 0.2;
+}
+
+/* Doctor join */
+.doctor-join {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-xs);
+  padding: var(--sp-xs) var(--sp-md);
+  background: var(--medical-green-soft);
+  border: 1px solid rgba(93, 184, 166, 0.2);
+  border-radius: var(--r-pill);
+  align-self: center;
+  font-size: 12px;
+  color: var(--medical-green);
+  font-weight: 500;
+}
+
+/* Quick replies */
+.quick-replies {
+  display: flex; flex-wrap: wrap; gap: var(--sp-xs); padding: var(--sp-xs) 0;
+}
+.quick-reply {
+  padding: 6px 14px;
+  background: var(--surface-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  font-size: 12px; color: var(--body); cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>医生咨询室 · 百度搜索→内容验证</h1>
+  <p>用户从百度百科点击"找医生看看" → 进入咨询室 → AI问诊收集 → 医生验证全流程</p>
+</div>
+
+<div class="screens-container">
+
+<div class="flow-label">Step 1 · 进入咨询室 — 展示待验证内容 + 推荐验证医生 + 补充信息</div>
+
+<div class="screen-row">
+
+<!-- ===== Screen 1: 进入咨询室，展示内容 + 推荐医生 + 开始预问诊 ===== -->
+<div class="phone-frame">
+  <div class="status-bar">
+    <span class="time">14:23</span>
+    <span class="icons">📶 📡 🔋</span>
+  </div>
+  <div class="top-nav">
+    <div class="back-btn">←</div>
+    <div class="room-info">
+      <div class="room-name">张医生咨询室</div>
+      <div class="room-status">在线</div>
+    </div>
+    <div class="more-btn">⋯</div>
+  </div>
+  <!-- 团队 Banner -->
+  <div class="team-banner">
+    <div class="team-avatars">
+      <div class="avatar lead">张</div>
+      <div class="avatar member">李</div>
+      <div class="avatar member">王</div>
+      <div class="avatar ai">AI</div>
+    </div>
+    <div class="team-info">
+      <strong>张建国主任</strong> · 消化内科团队<br>
+      AI助手 · 3位医生在线
+    </div>
+  </div>
+  <div class="chat-area">
+    <div class="system-msg">您从百度搜索进入咨询室 · 14:23</div>
+
+    <div class="message from-ai">
+      <div class="msg-avatar ai">AI</div>
+      <div class="msg-content">
+        <div class="msg-sender ai">医疗AI助手</div>
+        <div class="msg-bubble">
+          您好！我注意到您对一段百科内容有疑虑，想找医生确认：
+        </div>
+        <!-- 折叠的待验证内容 -->
+        <div class="verify-card">
+          <div class="verify-card-header">
+            <div class="verify-icon">📄</div>
+            <div class="verify-title">待验证内容</div>
+            <div class="verify-toggle">▾</div>
+          </div>
+          <div class="verify-card-body">
+            「胃溃疡患者<span class="highlight">应长期服用奥美拉唑</span>来抑制胃酸分泌，一般建议<span class="highlight">连续用药6个月以上</span>。如出现上腹痛，可自行加大剂量。」
+            <br>
+            <span class="source-tag">来源：百度百科 · 胃溃疡词条</span>
+          </div>
+        </div>
+        <div class="msg-time">14:23</div>
+      </div>
+    </div>
+
+    <!-- 推荐验证医生 -->
+    <div class="message from-ai">
+      <div class="msg-avatar ai">AI</div>
+      <div class="msg-content">
+        <div class="msg-sender ai">医疗AI助手</div>
+        <div class="msg-bubble">
+          这段内容涉及用药方案，为您推荐团队内最匹配的验证医生：
+        </div>
+        <div class="recommend-card">
+          <div class="rec-header">🩺 推荐验证医生</div>
+          <div class="rec-doctor">
+            <div class="rec-avatar">李</div>
+            <div class="rec-info">
+              <div class="rec-name">李明 主治医师</div>
+              <div class="rec-title">消化内科 · 10年临床 · 擅长胃食管疾病</div>
+              <div class="rec-tag">✓ 擅长领域匹配</div>
+            </div>
+          </div>
+          <div class="rec-note">为了让医生给出更精准的判断，请补充几个相关信息（约30秒）。也可跳过直接发送。</div>
+        </div>
+        <div class="msg-time">14:23</div>
+      </div>
+    </div>
+
+    <!-- 预问诊问卷 -->
+    <div class="message from-ai">
+      <div class="msg-avatar ai">AI</div>
+      <div class="msg-content">
+        <div class="msg-sender ai">医疗AI助手</div>
+        <div class="questionnaire-card">
+          <div class="q-header">📋 补充您的情况</div>
+          <div class="q-progress">
+            <div class="q-progress-bar"><div class="q-progress-fill" style="width: 33%"></div></div>
+            <div class="q-progress-text">1 / 3</div>
+          </div>
+          <div class="q-question">Q1: 您目前是否在服用奥美拉唑或其他胃药？</div>
+          <div class="q-options">
+            <div class="q-option">正在服用奥美拉唑</div>
+            <div class="q-option selected">之前吃过，现在停了</div>
+            <div class="q-option">从未服用过</div>
+            <div class="q-option">不确定药名</div>
+          </div>
+          <div class="q-footer">
+            <span class="q-skip">跳过问题，直接发送 →</span>
+            <button class="q-next-btn">下一题</button>
+          </div>
+        </div>
+        <div class="msg-time">14:24</div>
+      </div>
+    </div>
+
+  </div>
+  <div class="input-area">
+    <textarea class="input-field" placeholder="或直接输入补充信息..." rows="1"></textarea>
+    <button class="input-btn attach">📎</button>
+    <button class="input-btn send">↑</button>
+  </div>
+  <div class="home-indicator"><div class="bar"></div></div>
+</div>
+
+<!-- ===== Screen 2: 问诊完成 / 发送验证 + 等待中 ===== -->
+<div class="phone-frame">
+  <div class="status-bar">
+    <span class="time">14:25</span>
+    <span class="icons">📶 📡 🔋</span>
+  </div>
+  <div class="top-nav">
+    <div class="back-btn">←</div>
+    <div class="room-info">
+      <div class="room-name">张医生咨询室</div>
+      <div class="room-status">医生审阅中</div>
+    </div>
+    <div class="more-btn">⋯</div>
+  </div>
+  <div class="team-banner">
+    <div class="team-avatars">
+      <div class="avatar lead">张</div>
+      <div class="avatar member" style="border-color: var(--medical-green);">李</div>
+      <div class="avatar member">王</div>
+      <div class="avatar ai">AI</div>
+    </div>
+    <div class="team-info">
+      <strong>李明医生</strong> 正在审阅验证请求<br>
+      张建国主任 · AI助手 协同中
+    </div>
+  </div>
+  <div class="chat-area">
+    <div class="system-msg">信息补充完成 · 验证请求已发送 · 14:25</div>
+
+    <div class="message from-ai">
+      <div class="msg-avatar ai">AI</div>
+      <div class="msg-content">
+        <div class="msg-sender ai">医疗AI助手</div>
+        <div class="msg-bubble">
+          好的，我已将待验证内容和您的情况一起发送给李明医生：
+        </div>
+        <!-- 折叠的已发送内容摘要 -->
+        <div class="verify-card">
+          <div class="verify-card-header">
+            <div class="verify-icon">✓</div>
+            <div class="verify-title">已发送给李明医生</div>
+            <div class="verify-toggle">▸</div>
+          </div>
+        </div>
+        <div class="msg-time">14:25</div>
+      </div>
+    </div>
+
+    <!-- 患者情况摘要 -->
+    <div class="message from-ai">
+      <div class="msg-avatar ai">AI</div>
+      <div class="msg-content">
+        <div class="msg-sender ai">医疗AI助手</div>
+        <div class="msg-bubble">
+          同时附上了您的情况摘要：
+        </div>
+        <div class="verify-card">
+          <div class="verify-card-header">
+            <div class="verify-icon">👤</div>
+            <div class="verify-title">患者情况（已同步医生）</div>
+            <div class="verify-toggle">▾</div>
+          </div>
+          <div class="verify-card-body">
+            • 曾服用奥美拉唑，目前已停药<br>
+            • 症状持续约1个月<br>
+            • 有上腹隐痛、餐后胀气<br>
+            <span class="source-tag">来自患者补充</span>
+          </div>
+        </div>
+        <div class="msg-time">14:25</div>
+      </div>
+    </div>
+
+    <!-- 等待状态 -->
+    <div class="message from-ai">
+      <div class="msg-avatar ai">AI</div>
+      <div class="msg-content">
+        <div class="msg-sender ai">医疗AI助手</div>
+        <div class="waiting-card">
+          <div class="waiting-icon">🩺</div>
+          <div class="waiting-title">李明医生正在审阅</div>
+          <div class="waiting-desc">医生正在结合您的情况<br>对百科内容进行专业验证</div>
+          <div class="waiting-progress">
+            <div class="progress-bar"><div class="progress-fill"></div></div>
+            <span class="progress-text">预计 2-3 分钟</span>
+          </div>
+        </div>
+        <div class="msg-time">14:25</div>
+      </div>
+    </div>
+
+  </div>
+  <div class="input-area">
+    <textarea class="input-field" placeholder="等待中可补充问题..." rows="1"></textarea>
+    <button class="input-btn attach">📎</button>
+    <button class="input-btn send">↑</button>
+  </div>
+  <div class="home-indicator"><div class="bar"></div></div>
+</div>
+
+</div><!-- end screen-row -->
+
+<div class="flow-arrow">↓</div>
+<div class="flow-label">Step 2 · 医生完成验证 — 结合患者情况的个性化反馈</div>
+
+<!-- ===== Screen 3: 医生验证完成 ===== -->
+<div class="screen-row">
+<div class="phone-frame">
+  <div class="status-bar">
+    <span class="time">14:28</span>
+    <span class="icons">📶 📡 🔋</span>
+  </div>
+  <div class="top-nav">
+    <div class="back-btn">←</div>
+    <div class="room-info">
+      <div class="room-name">张医生咨询室</div>
+      <div class="room-status">李医生已回复</div>
+    </div>
+    <div class="more-btn">⋯</div>
+  </div>
+  <div class="team-banner">
+    <div class="team-avatars">
+      <div class="avatar lead">张</div>
+      <div class="avatar member" style="border-color: var(--medical-green);">李</div>
+      <div class="avatar member">王</div>
+      <div class="avatar ai">AI</div>
+    </div>
+    <div class="team-info">
+      <strong>李明医生</strong> 已完成验证回复<br>
+      张建国主任 · AI助手 协同中
+    </div>
+  </div>
+  <div class="chat-area">
+
+    <div class="doctor-join">✓ 李明医生已完成内容验证</div>
+
+    <div class="message from-doctor">
+      <div class="msg-avatar doctor">李</div>
+      <div class="msg-content">
+        <div class="msg-sender doctor">李明 · 消化内科</div>
+        <div class="verified-badge">✓ 已验证 · 部分内容需纠正</div>
+        <div class="doctor-response-card">
+          <div class="dr-header">
+            <div class="dr-avatar">李</div>
+            <div>
+              <div class="dr-name">李明 主治医师</div>
+              <div class="dr-title">消化内科 · 10年临床经验</div>
+            </div>
+          </div>
+          <div class="dr-content">
+            您好，我已看过百科内容和您的情况。综合判断如下：
+
+            <div class="key-point">
+              ⚠️ <strong>「连续用药6个月以上」— 不准确</strong><br>
+              标准疗程4-8周。您之前已服用过一段时间后停药，不建议自行重新开始长期服用。
+            </div>
+
+            <div class="key-point">
+              ❌ <strong>「可自行加大剂量」— 错误，有风险</strong><br>
+              PPI长期大剂量使用可能增加骨质疏松、肠道感染风险。剂量调整必须由医生评估后决定。
+            </div>
+
+            <div class="key-point">
+              💡 <strong>针对您的情况建议</strong><br>
+              您有停药后症状反复的情况，建议先做幽门螺杆菌(Hp)呼气试验。如果Hp阳性，需要规范的根除方案（四联疗法14天），而非单纯长期PPI。这是根治的关键。
+            </div>
+
+            总结：该百科内容<strong>存在误导</strong>，不建议作为用药依据。您的情况需要检查后制定个性化方案。
+          </div>
+          <div class="dr-footer">
+            <div class="dr-actions">
+              <button class="dr-action-btn primary">预约Hp检测</button>
+              <button class="dr-action-btn">继续提问</button>
+            </div>
+          </div>
+        </div>
+        <div class="msg-time">14:28</div>
+      </div>
+    </div>
+
+    <div class="message from-ai">
+      <div class="msg-avatar ai">AI</div>
+      <div class="msg-content">
+        <div class="msg-sender ai">医疗AI助手</div>
+        <div class="msg-bubble">
+          李医生已完成验证。您可以预约Hp呼气试验，或继续向医生提问。
+        </div>
+        <div class="quick-replies">
+          <span class="quick-reply">预约Hp检测</span>
+          <span class="quick-reply">还有问题想问</span>
+          <span class="quick-reply">谢谢，我了解了</span>
+        </div>
+        <div class="msg-time">14:28</div>
+      </div>
+    </div>
+
+  </div>
+  <div class="input-area">
+    <textarea class="input-field" placeholder="输入消息..." rows="1"></textarea>
+    <button class="input-btn attach">📎</button>
+    <button class="input-btn send">↑</button>
+  </div>
+  <div class="home-indicator"><div class="bar"></div></div>
+</div>
+</div><!-- end screen-row -->
+
+</div><!-- end screens-container -->
+
+</body>
+</html>

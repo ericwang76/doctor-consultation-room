@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>医生咨询室 - Doctor Consultation Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Claude-inspired warm palette adapted for medical context */
+  --primary: #cc785c;          /* Warm coral - main CTA */
+  --primary-active: #a9583e;
+  --medical-green: #5db8a6;    /* Teal accent - doctor/medical identity */
+  --medical-green-soft: #e8f5f2;
+  --ai-purple: #8b7ec8;        /* AI assistant identity */
+  --ai-purple-soft: #f0eef8;
+  --ink: #141413;
+  --body: #3d3d3a;
+  --body-strong: #252523;
+  --muted: #6c6a64;
+  --muted-soft: #8e8b82;
+  --hairline: #e6dfd8;
+  --canvas: #faf9f5;
+  --surface-soft: #f5f0e8;
+  --surface-card: #efe9de;
+  --surface-dark: #181715;
+  --on-primary: #ffffff;
+  --on-dark: #faf9f5;
+  --success: #5db872;
+  --warning: #d4a017;
+  --error: #c64545;
+  
+  /* Spacing */
+  --sp-xxs: 4px;
+  --sp-xs: 8px;
+  --sp-sm: 12px;
+  --sp-md: 16px;
+  --sp-lg: 24px;
+  --sp-xl: 32px;
+  
+  /* Radius */
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-pill: 9999px;
+  
+  /* Typography */
+  --font-display: 'Cormorant Garamond', 'Tiempos Headline', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--canvas);
+  color: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* ===== Phone Frame ===== */
+.phone-frame {
+  width: 390px;
+  height: 844px;
+  margin: 20px auto;
+  border-radius: 40px;
+  border: 8px solid #1a1a1a;
+  overflow: hidden;
+  position: relative;
+  background: var(--canvas);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Status bar */
+.status-bar {
+  height: 54px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 var(--sp-lg);
+  padding-bottom: 8px;
+  background: var(--canvas);
+  position: relative;
+  z-index: 10;
+}
+.status-bar .time { font-size: 15px; font-weight: 600; color: var(--ink); }
+.status-bar .icons { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--ink); }
+
+/* ===== Top Navigation ===== */
+.top-nav {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--canvas);
+  border-bottom: 1px solid var(--hairline);
+  position: relative;
+  z-index: 10;
+}
+.top-nav .back-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+  font-size: 18px;
+}
+.top-nav .room-info {
+  flex: 1;
+  margin-left: var(--sp-sm);
+}
+.top-nav .room-name {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+.top-nav .room-status {
+  font-size: 12px;
+  color: var(--medical-green);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.top-nav .room-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--medical-green);
+  border-radius: 50%;
+  display: inline-block;
+}
+.top-nav .more-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 18px;
+}
+
+/* ===== Team Banner ===== */
+.team-banner {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--surface-soft);
+  gap: var(--sp-sm);
+  border-bottom: 1px solid var(--hairline);
+}
+.team-avatars {
+  display: flex;
+  margin-right: var(--sp-xs);
+}
+.team-avatars .avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--canvas);
+  margin-left: -8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+.team-avatars .avatar:first-child { margin-left: 0; }
+.team-avatars .avatar.doctor-lead { background: var(--medical-green); }
+.team-avatars .avatar.doctor-member { background: #7bb3a8; }
+.team-avatars .avatar.ai { background: var(--ai-purple); font-size: 10px; }
+.team-info {
+  flex: 1;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.team-info strong { color: var(--body-strong); font-weight: 500; }
+
+/* ===== Chat Area ===== */
+.chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-md);
+  height: calc(100% - 54px - 56px - 48px - 60px - 80px);
+}
+
+/* System message */
+.system-msg {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted-soft);
+  padding: var(--sp-xs) var(--sp-md);
+  background: var(--surface-soft);
+  border-radius: var(--r-pill);
+  align-self: center;
+  max-width: 80%;
+}
+
+/* Message bubble base */
+.message {
+  display: flex;
+  gap: var(--sp-xs);
+  max-width: 85%;
+  align-items: flex-end;
+}
+.message.from-user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+.message.from-ai { align-self: flex-start; }
+.message.from-doctor { align-self: flex-start; }
+
+.msg-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  flex-shrink: 0;
+}
+.msg-avatar.ai { background: var(--ai-purple); }
+.msg-avatar.doctor { background: var(--medical-green); }
+
+.msg-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.msg-sender {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 0 var(--sp-xs);
+}
+.msg-sender.ai { color: var(--ai-purple); }
+.msg-sender.doctor { color: var(--medical-green); }
+
+.msg-bubble {
+  padding: var(--sp-sm) var(--sp-md);
+  border-radius: var(--r-xl);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--body);
+}
+
+/* User bubble - coral accent */
+.message.from-user .msg-bubble {
+  background: var(--primary);
+  color: var(--on-primary);
+  border-bottom-right-radius: var(--r-sm);
+}
+
+/* AI bubble - purple tinted */
+.message.from-ai .msg-bubble {
+  background: var(--ai-purple-soft);
+  border: 1px solid rgba(139, 126, 200, 0.15);
+  border-bottom-left-radius: var(--r-sm);
+}
+
+/* Doctor bubble - green tinted */
+.message.from-doctor .msg-bubble {
+  background: var(--medical-green-soft);
+  border: 1px solid rgba(93, 184, 166, 0.15);
+  border-bottom-left-radius: var(--r-sm);
+}
+
+.msg-time {
+  font-size: 10px;
+  color: var(--muted-soft);
+  padding: 0 var(--sp-xs);
+}
+.message.from-user .msg-time { text-align: right; }
+
+/* AI action card */
+.ai-action-card {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  padding: var(--sp-sm) var(--sp-md);
+  margin-top: var(--sp-xs);
+}
+.ai-action-card .action-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ai-purple);
+  margin-bottom: var(--sp-xxs);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ai-action-card .action-desc {
+  font-size: 13px;
+  color: var(--body);
+}
+.ai-action-card .action-btn {
+  display: inline-block;
+  margin-top: var(--sp-xs);
+  padding: 6px 14px;
+  background: var(--medical-green);
+  color: white;
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Doctor join notice */
+.doctor-join {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-xs);
+  padding: var(--sp-xs) var(--sp-md);
+  background: var(--medical-green-soft);
+  border: 1px solid rgba(93, 184, 166, 0.2);
+  border-radius: var(--r-pill);
+  align-self: center;
+  font-size: 12px;
+  color: var(--medical-green);
+  font-weight: 500;
+}
+
+/* Typing indicator */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  padding: var(--sp-sm) var(--sp-md);
+  align-self: flex-start;
+}
+.typing-indicator .dots {
+  display: flex;
+  gap: 3px;
+}
+.typing-indicator .dot {
+  width: 6px;
+  height: 6px;
+  background: var(--muted-soft);
+  border-radius: 50%;
+  animation: bounce 1.4s infinite;
+}
+.typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+.typing-indicator .typing-label {
+  font-size: 12px;
+  color: var(--muted-soft);
+}
+
+/* ===== Input Area ===== */
+.input-area {
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--canvas);
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-xs);
+}
+.input-field {
+  flex: 1;
+  background: var(--surface-soft);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-xl);
+  padding: var(--sp-sm) var(--sp-md);
+  font-size: 14px;
+  color: var(--body);
+  min-height: 40px;
+  max-height: 100px;
+  resize: none;
+  outline: none;
+  font-family: var(--font-body);
+  line-height: 1.4;
+}
+.input-field::placeholder { color: var(--muted-soft); }
+.input-actions {
+  display: flex;
+  gap: var(--sp-xxs);
+}
+.input-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+}
+.input-btn.send {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.input-btn.attach {
+  background: transparent;
+  color: var(--muted);
+}
+
+/* ===== Home Indicator ===== */
+.home-indicator {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--canvas);
+}
+.home-indicator .bar {
+  width: 134px;
+  height: 5px;
+  background: var(--ink);
+  border-radius: 3px;
+  opacity: 0.2;
+}
+
+/* ===== Multi-screen layout ===== */
+.screens-container {
+  display: flex;
+  gap: 40px;
+  padding: 40px;
+  justify-content: center;
+  flex-wrap: wrap;
+  min-height: 100vh;
+  align-items: flex-start;
+  background: #f0ebe3;
+}
+
+.screen-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.screen-label {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--ink);
+  letter-spacing: -0.5px;
+}
+.screen-sublabel {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Quick replies */
+.quick-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-xs);
+  padding: var(--sp-xs) 0;
+}
+.quick-reply {
+  padding: 6px 14px;
+  background: var(--surface-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  color: var(--body);
+  cursor: pointer;
+}
+.quick-reply:hover { background: var(--surface-soft); border-color: var(--primary); }
+</style>
+</head>
+<body>
+<div class="screens-container">
+
+<!-- ===== Screen 1: 初始对话 / AI 接待 ===== -->
+<div class="screen-wrapper">
+  <div class="screen-label">初始接待</div>
+  <div class="screen-sublabel">AI 助手欢迎 & 分诊</div>
+  <div class="phone-frame">
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <span class="icons">📶 📡 🔋</span>
+    </div>
+    <div class="top-nav">
+      <div class="back-btn">←</div>
+      <div class="room-info">
+        <div class="room-name">王医生咨询室</div>
+        <div class="room-status">咨询中</div>
+      </div>
+      <div class="more-btn">⋯</div>
+    </div>
+    <div class="team-banner">
+      <div class="team-avatars">
+        <div class="avatar doctor-lead">王</div>
+        <div class="avatar doctor-member">李</div>
+        <div class="avatar doctor-member">赵</div>
+        <div class="avatar ai">AI</div>
+      </div>
+      <div class="team-info">
+        <strong>王建华主任</strong> · 消化内科团队<br>
+        AI助手 · 2位医生在线
+      </div>
+    </div>
+    <div class="chat-area">
+      <div class="system-msg">您已进入王医生咨询室 · 10:02</div>
+      
+      <div class="message from-ai">
+        <div class="msg-avatar ai">AI</div>
+        <div class="msg-content">
+          <div class="msg-sender ai">医疗AI助手</div>
+          <div class="msg-bubble">
+            您好！欢迎来到王建华主任的咨询室。我是您的医疗AI助手，会协助您完成初步问诊。请问您今天想咨询什么问题？
+          </div>
+          <div class="msg-time">10:02</div>
+        </div>
+      </div>
+
+      <div class="message from-user">
+        <div class="msg-content">
+          <div class="msg-bubble">最近胃一直不舒服，吃完饭后经常胀气，有时候还会反酸</div>
+          <div class="msg-time">10:03</div>
+        </div>
+      </div>
+
+      <div class="message from-ai">
+        <div class="msg-avatar ai">AI</div>
+        <div class="msg-content">
+          <div class="msg-sender ai">医疗AI助手</div>
+          <div class="msg-bubble">
+            了解，我先帮您做一下初步评估：<br><br>
+            1️⃣ 这个症状持续多久了？<br>
+            2️⃣ 是否伴有疼痛？哪个位置？<br>
+            3️⃣ 最近饮食或作息有变化吗？
+          </div>
+          <div class="quick-replies">
+            <span class="quick-reply">一周左右</span>
+            <span class="quick-reply">一个月以上</span>
+            <span class="quick-reply">时好时坏</span>
+          </div>
+          <div class="msg-time">10:03</div>
+        </div>
+      </div>
+    </div>
+    <div class="input-area">
+      <textarea class="input-field" placeholder="描述您的症状..." rows="1"></textarea>
+      <div class="input-actions">
+        <button class="input-btn attach">📎</button>
+        <button class="input-btn send">↑</button>
+      </div>
+    </div>
+    <div class="home-indicator"><div class="bar"></div></div>
+  </div>
+</div>
+
+<!-- ===== Screen 2: AI 整理 + 转接真人医生 ===== -->
+<div class="screen-wrapper">
+  <div class="screen-label">智能转接</div>
+  <div class="screen-sublabel">AI 整理病情 → 安排医生</div>
+  <div class="phone-frame">
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <span class="icons">📶 📡 🔋</span>
+    </div>
+    <div class="top-nav">
+      <div class="back-btn">←</div>
+      <div class="room-info">
+        <div class="room-name">王医生咨询室</div>
+        <div class="room-status">咨询中</div>
+      </div>
+      <div class="more-btn">⋯</div>
+    </div>
+    <div class="team-banner">
+      <div class="team-avatars">
+        <div class="avatar doctor-lead">王</div>
+        <div class="avatar doctor-member">李</div>
+        <div class="avatar doctor-member">赵</div>
+        <div class="avatar ai">AI</div>
+      </div>
+      <div class="team-info">
+        <strong>王建华主任</strong> · 消化内科团队<br>
+        AI助手 · 2位医生在线
+      </div>
+    </div>
+    <div class="chat-area">
+      <div class="message from-user">
+        <div class="msg-content">
+          <div class="msg-bubble">大概一个多月了，上腹部隐隐作痛，最近工作压力大，经常熬夜吃外卖</div>
+          <div class="msg-time">10:05</div>
+        </div>
+      </div>
+
+      <div class="message from-ai">
+        <div class="msg-avatar ai">AI</div>
+        <div class="msg-content">
+          <div class="msg-sender ai">医疗AI助手</div>
+          <div class="msg-bubble">
+            感谢您的详细描述。我已整理好您的初步病情摘要：
+          </div>
+          <div class="ai-action-card">
+            <div class="action-title">📋 病情摘要</div>
+            <div class="action-desc">
+              <strong>主诉：</strong>餐后胀气、反酸1月余<br>
+              <strong>伴随：</strong>上腹隐痛<br>
+              <strong>诱因：</strong>作息不规律、饮食不当<br>
+              <strong>建议：</strong>需进一步评估，建议由消化内科医生诊断
+            </div>
+          </div>
+          <div class="msg-time">10:06</div>
+        </div>
+      </div>
+
+      <div class="message from-ai">
+        <div class="msg-avatar ai">AI</div>
+        <div class="msg-content">
+          <div class="msg-sender ai">医疗AI助手</div>
+          <div class="msg-bubble">
+            根据您的症状，我为您安排李医生（消化内科主治）接入对话。他将查看以上摘要后为您进一步问诊。
+          </div>
+          <div class="ai-action-card">
+            <div class="action-title">🩺 正在安排医生</div>
+            <div class="action-desc">李明医生 · 消化内科主治医师<br>预计等待时间：1-2分钟</div>
+            <div class="action-btn">✓ 同意接入</div>
+          </div>
+          <div class="msg-time">10:06</div>
+        </div>
+      </div>
+
+      <div class="doctor-join">🩺 李明医生已加入对话</div>
+    </div>
+    <div class="input-area">
+      <textarea class="input-field" placeholder="输入消息..." rows="1"></textarea>
+      <div class="input-actions">
+        <button class="input-btn attach">📎</button>
+        <button class="input-btn send">↑</button>
+      </div>
+    </div>
+    <div class="home-indicator"><div class="bar"></div></div>
+  </div>
+</div>
+
+<!-- ===== Screen 3: 三方对话（用户 + 医生 + AI 协助） ===== -->
+<div class="screen-wrapper">
+  <div class="screen-label">三方协同</div>
+  <div class="screen-sublabel">用户 + 医生 + AI 实时对话</div>
+  <div class="phone-frame">
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <span class="icons">📶 📡 🔋</span>
+    </div>
+    <div class="top-nav">
+      <div class="back-btn">←</div>
+      <div class="room-info">
+        <div class="room-name">王医生咨询室</div>
+        <div class="room-status">李明医生服务中</div>
+      </div>
+      <div class="more-btn">⋯</div>
+    </div>
+    <div class="team-banner">
+      <div class="team-avatars">
+        <div class="avatar doctor-lead">王</div>
+        <div class="avatar doctor-member" style="border: 2px solid var(--medical-green);">李</div>
+        <div class="avatar doctor-member">赵</div>
+        <div class="avatar ai">AI</div>
+      </div>
+      <div class="team-info">
+        <strong>李明医生</strong> 正在为您服务<br>
+        王建华主任 · AI助手 协同中
+      </div>
+    </div>
+    <div class="chat-area">
+      <div class="message from-doctor">
+        <div class="msg-avatar doctor">李</div>
+        <div class="msg-content">
+          <div class="msg-sender doctor">李明 · 消化内科</div>
+          <div class="msg-bubble">
+            您好，我是李明医生。刚看了AI助手整理的情况，想再确认几个问题：反酸是在饭后立刻出现还是过一段时间？有没有黑便或消瘦的情况？
+          </div>
+          <div class="msg-time">10:08</div>
+        </div>
+      </div>
+
+      <div class="message from-user">
+        <div class="msg-content">
+          <div class="msg-bubble">饭后大概半小时开始反酸，黑便没有，体重倒是没怎么变</div>
+          <div class="msg-time">10:09</div>
+        </div>
+      </div>
+
+      <div class="message from-doctor">
+        <div class="msg-avatar doctor">李</div>
+        <div class="msg-content">
+          <div class="msg-sender doctor">李明 · 消化内科</div>
+          <div class="msg-bubble">
+            好的，初步判断可能是功能性消化不良或轻度胃食管反流。建议您做一个胃镜检查排除器质性病变。我先开个检查单，您可以预约时间。
+          </div>
+          <div class="msg-time">10:10</div>
+        </div>
+      </div>
+
+      <div class="message from-ai">
+        <div class="msg-avatar ai">AI</div>
+        <div class="msg-content">
+          <div class="msg-sender ai">AI助手 · 服务提示</div>
+          <div class="msg-bubble">
+            我已为您整理李医生的建议：
+          </div>
+          <div class="ai-action-card">
+            <div class="action-title">📝 诊疗建议</div>
+            <div class="action-desc">
+              • 建议做胃镜检查<br>
+              • 初步印象：功能性消化不良 / 胃食管反流<br>
+              • 检查前注意：空腹8小时以上
+            </div>
+            <div class="action-btn">预约胃镜检查</div>
+          </div>
+          <div class="msg-time">10:10</div>
+        </div>
+      </div>
+
+      <div class="typing-indicator">
+        <div class="msg-avatar doctor" style="width:24px;height:24px;font-size:10px;">李</div>
+        <div class="dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+        <span class="typing-label">李医生正在输入...</span>
+      </div>
+    </div>
+    <div class="input-area">
+      <textarea class="input-field" placeholder="输入消息..." rows="1"></textarea>
+      <div class="input-actions">
+        <button class="input-btn attach">📎</button>
+        <button class="input-btn send">↑</button>
+      </div>
+    </div>
+    <div class="home-indicator"><div class="bar"></div></div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
