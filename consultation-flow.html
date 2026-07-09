@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>医生咨询室 - 继续问诊→支付→对话→小结场景</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #cc785c;
+  --primary-active: #a9583e;
+  --primary-soft: #fdf3ef;
+  --medical-green: #5db8a6;
+  --medical-green-soft: #e8f5f2;
+  --ai-purple: #8b7ec8;
+  --ai-purple-soft: #f0eef8;
+  --ink: #141413;
+  --body: #3d3d3a;
+  --body-strong: #252523;
+  --muted: #6c6a64;
+  --muted-soft: #8e8b82;
+  --hairline: #e6dfd8;
+  --canvas: #faf9f5;
+  --surface-soft: #f5f0e8;
+  --surface-card: #efe9de;
+  --surface-dark: #181715;
+  --on-primary: #ffffff;
+  --on-dark: #faf9f5;
+  --success: #5db872;
+  --success-soft: #edf8f0;
+  --warning: #d4a017;
+  --warning-soft: #fdf8e8;
+  --error: #c64545;
+  --pay-gold: #e8a55a;
+  --pay-gold-soft: #fef7ee;
+  
+  --sp-xxs: 4px;
+  --sp-xs: 8px;
+  --sp-sm: 12px;
+  --sp-md: 16px;
+  --sp-lg: 24px;
+  --sp-xl: 32px;
+  
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-pill: 9999px;
+  
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  background: #f0ebe3;
+  color: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ===== Layout ===== */
+.page-header {
+  text-align: center;
+  padding: 40px 20px 20px;
+}
+.page-header h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -0.5px;
+}
+.page-header p {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 8px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.flow-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 28px 0 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.flow-label::before, .flow-label::after {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: var(--hairline);
+}
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  color: var(--muted-soft);
+  font-size: 20px;
+}
+
+.screens-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px 60px;
+  gap: 0;
+}
+
+.screen-row {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+/* ===== Phone Frame ===== */
+.phone-frame {
+  width: 375px;
+  height: 812px;
+  border-radius: 40px;
+  border: 8px solid #1a1a1a;
+  overflow: hidden;
+  position: relative;
+  background: var(--canvas);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.status-bar {
+  height: 50px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 var(--sp-lg);
+  padding-bottom: 8px;
+  background: var(--canvas);
+  flex-shrink: 0;
+}
+.status-bar .time { font-size: 15px; font-weight: 600; color: var(--ink); }
+.status-bar .icons { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--ink); }
+
+/* ===== Top Nav ===== */
+.top-nav {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--canvas);
+  border-bottom: 1px solid var(--hairline);
+  flex-shrink: 0;
+}
+.top-nav .back-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink); font-size: 18px;
+}
+.top-nav .room-info { flex: 1; margin-left: var(--sp-sm); }
+.top-nav .room-name {
+  font-size: 16px; font-weight: 600; color: var(--ink); letter-spacing: -0.2px;
+}
+.top-nav .room-status {
+  font-size: 12px; color: var(--medical-green);
+  display: flex; align-items: center; gap: 4px;
+}
+.top-nav .room-status::before {
+  content: ''; width: 6px; height: 6px;
+  background: var(--medical-green); border-radius: 50%;
+}
+.top-nav .room-status.paying::before { background: var(--pay-gold); }
+.top-nav .room-status.paying { color: var(--pay-gold); }
+.top-nav .more-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 18px;
+}
+
+/* ===== Team Banner ===== */
+.team-banner {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--surface-soft);
+  gap: var(--sp-sm);
+  border-bottom: 1px solid var(--hairline);
+  flex-shrink: 0;
+}
+.team-avatars {
+  display: flex;
+}
+.team-avatars .avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--canvas);
+  margin-left: -6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: white;
+}
+.team-avatars .avatar:first-child { margin-left: 0; }
+.team-avatars .avatar.lead { background: var(--medical-green); }
+.team-avatars .avatar.member { background: #7bb3a8; }
+.team-avatars .avatar.ai { background: var(--ai-purple); font-size: 9px; }
+.team-info {
+  flex: 1; font-size: 12px; color: var(--muted); line-height: 1.4;
+}
+.team-info strong { color: var(--body-strong); font-weight: 500; }
+
+/* ===== Chat Area ===== */
+.chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-md);
+}
+
+.system-msg {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted-soft);
+  padding: var(--sp-xs) var(--sp-md);
+  background: var(--surface-soft);
+  border-radius: var(--r-pill);
+  align-self: center;
+  max-width: 85%;
+}
+.system-msg.success {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.message {
+  display: flex;
+  gap: var(--sp-xs);
+  max-width: 88%;
+  align-items: flex-end;
+}
+.message.from-user { align-self: flex-end; flex-direction: row-reverse; }
+.message.from-ai { align-self: flex-start; }
+.message.from-doctor { align-self: flex-start; }
+
+.msg-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: white; flex-shrink: 0;
+}
+.msg-avatar.ai { background: var(--ai-purple); }
+.msg-avatar.doctor { background: var(--medical-green); }
+
+.msg-content { display: flex; flex-direction: column; gap: 2px; }
+.msg-sender { font-size: 11px; font-weight: 500; padding: 0 var(--sp-xs); }
+.msg-sender.ai { color: var(--ai-purple); }
+.msg-sender.doctor { color: var(--medical-green); }
+
+.msg-bubble {
+  padding: var(--sp-sm) var(--sp-md);
+  border-radius: var(--r-xl);
+  font-size: 14px; line-height: 1.55; color: var(--body);
+}
+.message.from-user .msg-bubble {
+  background: var(--primary); color: var(--on-primary);
+  border-bottom-right-radius: var(--r-sm);
+}
+.message.from-ai .msg-bubble {
+  background: var(--ai-purple-soft);
+  border: 1px solid rgba(139, 126, 200, 0.12);
+  border-bottom-left-radius: var(--r-sm);
+}
+.message.from-doctor .msg-bubble {
+  background: var(--medical-green-soft);
+  border: 1px solid rgba(93, 184, 166, 0.12);
+  border-bottom-left-radius: var(--r-sm);
+}
+.msg-time {
+  font-size: 10px; color: var(--muted-soft); padding: 0 var(--sp-xs);
+}
+.message.from-user .msg-time { text-align: right; }
+
+/* ===== Payment Card ===== */
+.payment-card {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  margin-top: var(--sp-xs);
+  overflow: hidden;
+}
+.payment-card .pay-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--pay-gold-soft);
+  border-bottom: 1px solid rgba(232, 165, 90, 0.15);
+}
+.payment-card .pay-icon {
+  width: 28px; height: 28px;
+  background: var(--pay-gold);
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.payment-card .pay-title {
+  flex: 1;
+  font-size: 14px; font-weight: 500; color: var(--body-strong);
+}
+.payment-card .pay-body {
+  padding: var(--sp-md);
+}
+.payment-card .pay-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--sp-xs) 0;
+  font-size: 13px;
+  color: var(--body);
+}
+.payment-card .pay-item .pay-label { color: var(--muted); }
+.payment-card .pay-item .pay-value { font-weight: 500; color: var(--body-strong); }
+.payment-card .pay-item .pay-value.price {
+  font-size: 18px; font-weight: 600; color: var(--primary);
+}
+.payment-card .pay-divider {
+  height: 1px; background: var(--hairline); margin: var(--sp-xs) 0;
+}
+.payment-card .pay-note {
+  font-size: 11px; color: var(--muted-soft); margin-top: var(--sp-xs); line-height: 1.5;
+}
+.payment-card .pay-footer {
+  padding: var(--sp-sm) var(--sp-md);
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.payment-card .pay-btn {
+  padding: 8px 24px;
+  background: var(--primary);
+  color: white;
+  border-radius: var(--r-pill);
+  font-size: 14px; font-weight: 500;
+  border: none; cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+}
+.payment-card .pay-guarantee {
+  font-size: 11px; color: var(--muted-soft);
+  display: flex; align-items: center; gap: 3px;
+}
+
+/* ===== Waiting State ===== */
+.waiting-card {
+  background: var(--canvas);
+  border: 1.5px dashed var(--medical-green);
+  border-radius: var(--r-lg);
+  padding: var(--sp-md);
+  margin-top: var(--sp-xs);
+  text-align: center;
+}
+.waiting-card .waiting-icon {
+  width: 40px; height: 40px;
+  margin: 0 auto var(--sp-sm);
+  border-radius: 50%;
+  background: var(--medical-green-soft);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  animation: pulse-ring 2s infinite;
+}
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(93, 184, 166, 0.3); }
+  70% { box-shadow: 0 0 0 8px rgba(93, 184, 166, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(93, 184, 166, 0); }
+}
+.waiting-card .waiting-title {
+  font-size: 14px; font-weight: 500; color: var(--body-strong);
+  margin-bottom: 4px;
+}
+.waiting-card .waiting-desc {
+  font-size: 12px; color: var(--muted); line-height: 1.5;
+}
+.waiting-card .waiting-progress {
+  margin-top: var(--sp-sm);
+  display: flex; align-items: center; gap: var(--sp-xs);
+  justify-content: center;
+}
+.waiting-card .progress-bar {
+  width: 120px; height: 3px;
+  background: var(--hairline); border-radius: 2px; overflow: hidden;
+}
+.waiting-card .progress-fill {
+  height: 100%; width: 60%;
+  background: var(--medical-green); border-radius: 2px;
+  animation: progress-move 2s ease-in-out infinite;
+}
+@keyframes progress-move {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+.waiting-card .progress-text {
+  font-size: 11px; color: var(--muted-soft);
+}
+
+/* ===== Questionnaire (inline) ===== */
+.questionnaire-card {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  padding: var(--sp-md);
+  margin-top: var(--sp-xs);
+}
+.questionnaire-card .q-header {
+  font-size: 12px; font-weight: 500; color: var(--ai-purple);
+  margin-bottom: var(--sp-sm);
+  display: flex; align-items: center; gap: 4px;
+}
+.questionnaire-card .q-progress {
+  display: flex; align-items: center; gap: var(--sp-xs);
+  margin-bottom: var(--sp-sm);
+}
+.questionnaire-card .q-progress-bar {
+  flex: 1; height: 3px; background: var(--hairline); border-radius: 2px; overflow: hidden;
+}
+.questionnaire-card .q-progress-fill {
+  height: 100%; background: var(--ai-purple); border-radius: 2px;
+}
+.questionnaire-card .q-progress-text {
+  font-size: 11px; color: var(--muted-soft); white-space: nowrap;
+}
+.questionnaire-card .q-question {
+  font-size: 14px; color: var(--body-strong); line-height: 1.5;
+  margin-bottom: var(--sp-sm);
+}
+.questionnaire-card .q-options {
+  display: flex; flex-direction: column; gap: var(--sp-xs);
+}
+.questionnaire-card .q-option {
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--surface-soft);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  font-size: 13px; color: var(--body); cursor: pointer;
+}
+.questionnaire-card .q-option.selected {
+  background: var(--ai-purple-soft);
+  border-color: var(--ai-purple);
+  color: var(--body-strong);
+}
+.questionnaire-card .q-footer {
+  display: flex; justify-content: flex-end; align-items: center;
+  margin-top: var(--sp-sm);
+  padding-top: var(--sp-sm);
+  border-top: 1px solid var(--hairline);
+}
+.questionnaire-card .q-next-btn {
+  padding: 7px 18px;
+  background: var(--ai-purple);
+  color: white;
+  border-radius: var(--r-pill);
+  font-size: 12px; font-weight: 500;
+  border: none; cursor: pointer;
+}
+
+/* ===== Doctor Ready Card (clickable) ===== */
+.doctor-ready-card {
+  background: linear-gradient(135deg, var(--medical-green-soft) 0%, #edfaf7 100%);
+  border: 1.5px solid var(--medical-green);
+  border-radius: var(--r-lg);
+  padding: var(--sp-md);
+  margin-top: var(--sp-xs);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.doctor-ready-card::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 60px; height: 60px;
+  background: radial-gradient(circle at top right, rgba(93,184,166,0.15), transparent 70%);
+}
+.doctor-ready-card .drc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: var(--medical-green);
+  border-radius: var(--r-pill);
+  font-size: 11px; font-weight: 500; color: white;
+  margin-bottom: var(--sp-sm);
+  animation: pulse-badge 2s infinite;
+}
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+.doctor-ready-card .drc-doctor {
+  display: flex; align-items: center; gap: var(--sp-sm);
+  margin-bottom: var(--sp-sm);
+}
+.doctor-ready-card .drc-avatar {
+  width: 40px; height: 40px;
+  background: var(--medical-green);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 16px; font-weight: 600;
+  flex-shrink: 0;
+}
+.doctor-ready-card .drc-name { font-size: 15px; font-weight: 500; color: var(--body-strong); }
+.doctor-ready-card .drc-title { font-size: 12px; color: var(--muted); }
+.doctor-ready-card .drc-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  background: var(--medical-green);
+  color: white;
+  border-radius: var(--r-md);
+  font-size: 14px; font-weight: 500;
+}
+.doctor-ready-card .drc-hint {
+  text-align: center;
+  margin-top: var(--sp-xs);
+  font-size: 11px;
+  color: var(--muted-soft);
+}
+
+/* ===== IM Overlay (2/3 screen) ===== */
+.im-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 67%;
+  background: white;
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  box-shadow: 0 -8px 30px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+.im-overlay .im-handle {
+  width: 36px; height: 4px;
+  background: var(--hairline);
+  border-radius: 2px;
+  margin: var(--sp-sm) auto var(--sp-xs);
+}
+.im-overlay .im-header {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-xs) var(--sp-md);
+  border-bottom: 1px solid var(--hairline);
+  gap: var(--sp-xs);
+}
+.im-overlay .im-avatar {
+  width: 32px; height: 32px;
+  background: var(--medical-green);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 13px; font-weight: 600;
+}
+.im-overlay .im-name { font-size: 14px; font-weight: 500; color: var(--body-strong); flex: 1; }
+.im-overlay .im-status { font-size: 11px; color: var(--medical-green); }
+.im-overlay .im-close {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--muted); cursor: pointer;
+  border-radius: 50%;
+  background: var(--surface-soft);
+}
+.im-overlay .im-chat {
+  flex: 1;
+  padding: var(--sp-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
+  overflow-y: auto;
+}
+.im-overlay .im-msg {
+  max-width: 80%;
+  padding: var(--sp-sm) var(--sp-md);
+  border-radius: var(--r-xl);
+  font-size: 14px; line-height: 1.5;
+}
+.im-overlay .im-msg.doctor {
+  align-self: flex-start;
+  background: var(--medical-green-soft);
+  border-bottom-left-radius: var(--r-sm);
+  color: var(--body);
+}
+.im-overlay .im-msg.user {
+  align-self: flex-end;
+  background: var(--primary);
+  color: white;
+  border-bottom-right-radius: var(--r-sm);
+}
+.im-overlay .im-msg .im-time {
+  font-size: 10px; color: var(--muted-soft); margin-top: 2px;
+}
+.im-overlay .im-input-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  padding: var(--sp-sm) var(--sp-md);
+  border-top: 1px solid var(--hairline);
+}
+.im-overlay .im-input {
+  flex: 1;
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--surface-soft);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-xl);
+  font-size: 14px;
+  outline: none;
+}
+.im-overlay .im-send {
+  width: 32px; height: 32px;
+  background: var(--medical-green);
+  color: white;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; border: none; cursor: pointer;
+}
+
+/* ===== Summary Card ===== */
+.summary-card {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  margin-top: var(--sp-xs);
+  overflow: hidden;
+}
+.summary-card .sum-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--ai-purple-soft);
+  border-bottom: 1px solid rgba(139, 126, 200, 0.12);
+}
+.summary-card .sum-icon {
+  font-size: 14px;
+}
+.summary-card .sum-title {
+  font-size: 13px; font-weight: 500; color: var(--ai-purple);
+}
+.summary-card .sum-body {
+  padding: var(--sp-md);
+}
+.summary-card .sum-section {
+  margin-bottom: var(--sp-sm);
+}
+.summary-card .sum-section:last-child { margin-bottom: 0; }
+.summary-card .sum-label {
+  font-size: 11px; font-weight: 500; color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--sp-xxs);
+}
+.summary-card .sum-text {
+  font-size: 13px; color: var(--body); line-height: 1.6;
+}
+
+/* ===== Prescription Card ===== */
+.rx-card {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  margin-top: var(--sp-xs);
+  overflow: hidden;
+}
+.rx-card .rx-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--success-soft);
+  border-bottom: 1px solid rgba(93, 184, 114, 0.15);
+}
+.rx-card .rx-icon { font-size: 14px; }
+.rx-card .rx-title { font-size: 13px; font-weight: 500; color: var(--success); }
+.rx-card .rx-badge {
+  margin-left: auto;
+  padding: 2px 8px;
+  background: var(--success);
+  color: white;
+  border-radius: var(--r-pill);
+  font-size: 10px; font-weight: 500;
+}
+.rx-card .rx-body { padding: var(--sp-md); }
+.rx-card .rx-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-sm);
+  padding: var(--sp-sm) 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.rx-card .rx-item:last-child { border-bottom: none; }
+.rx-card .rx-num {
+  width: 20px; height: 20px;
+  background: var(--success-soft);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: var(--success);
+  flex-shrink: 0; margin-top: 2px;
+}
+.rx-card .rx-drug-name { font-size: 13px; font-weight: 500; color: var(--body-strong); }
+.rx-card .rx-drug-dose { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.rx-card .rx-footer {
+  padding: var(--sp-sm) var(--sp-md);
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.rx-card .rx-total {
+  font-size: 12px; color: var(--muted);
+}
+.rx-card .rx-total .rx-price {
+  font-size: 18px; font-weight: 600; color: var(--primary);
+}
+.rx-card .rx-pay-btn {
+  padding: 8px 20px;
+  background: var(--primary);
+  color: white;
+  border-radius: var(--r-pill);
+  font-size: 13px; font-weight: 500;
+  border: none; cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+}
+
+/* ===== Input Area ===== */
+.input-area {
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--canvas);
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-xs);
+  flex-shrink: 0;
+}
+.input-field {
+  flex: 1;
+  background: var(--surface-soft);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-xl);
+  padding: var(--sp-sm) var(--sp-md);
+  font-size: 14px; color: var(--body);
+  min-height: 40px;
+  resize: none; outline: none;
+  font-family: var(--font-body);
+}
+.input-field::placeholder { color: var(--muted-soft); }
+.input-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; border: none; cursor: pointer;
+}
+.input-btn.send { background: var(--primary); color: var(--on-primary); }
+.input-btn.attach { background: transparent; color: var(--muted); }
+
+.home-indicator {
+  height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--canvas); flex-shrink: 0;
+}
+.home-indicator .bar {
+  width: 134px; height: 5px;
+  background: var(--ink); border-radius: 3px; opacity: 0.2;
+}
+
+/* Quick replies */
+.quick-replies {
+  display: flex; flex-wrap: wrap; gap: var(--sp-xs); padding: var(--sp-xs) 0;
+}
+.quick-reply {
+  padding: 6px 14px;
+  background: var(--surface-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  font-size: 12px; color: var(--body); cursor: pointer;
+}
+
+/* Dimmed background */
+.dimmed-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 33%;
+  background: rgba(0,0,0,0.3);
+  z-index: 99;
+}
+
+/* End session banner */
+.end-session {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-xs);
+  padding: var(--sp-xs) var(--sp-md);
+  background: var(--surface-soft);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  align-self: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>医生咨询室 · 继续问诊全流程</h1>
+  <p>用户选择继续提问 → 诊费支付 → 等待+预问诊 → 真人医生对话 → 就诊小结+处方</p>
+</div>
+
+<div class="screens-container">
+
+<!-- ===== Step 1: 诊费单 ===== -->
+<div class="flow-label">Step 1 · 推送诊费单 — 用户支付</div>
+<div class="screen-row">
+<div class="phone-frame">
+  <div class="status-bar">
+    <span class="time">14:30</span>
+    <span class="icons">📶 📡 🔋</span>
+  </div>
+  <div class="top-nav">
+    <div class="back-btn">←</div>
+    <div class="room-info">
+      <div class="room-name">张医生咨询室</div>
+      <div class="room-status paying">待支付</div>
+    </div>
+    <div class="more-btn">⋯</div>
+  </div>
+  <div class="team-banner">
+    <div class="team-avatars">
+      <div class="avatar lead">张</div>
+      <div class="avatar member">李</div>
+      <div class="avatar member">王</div>
+      <div class="avatar ai">AI</div>
+    </div>
+    <div class="team-info">
+      <strong>张建国主任</strong> · 消化内科团队<br>
+      AI助手 · 3位医生在线
+    </div>
+  </div>
+  <div class="chat-area">
+
+    <div class="message from-user">
+      <div class="msg-content">
+        <div class="msg-bubble">我还有其他问题想详细问问医生</div>
+        <div class="msg-time">14:30</div>
+      </div>
+    </div>
+
+    <div class="message from-ai">
+      <div class="msg-avatar ai">AI</div>
+      <div class="msg-content">
+        <div class="msg-sender ai">医疗AI助手</div>
+        <div class="msg-bubble">
+          好的，为您安排李明医生进行一对一问诊。请先确认以下诊费：
+        </div>
+        <!-- 诊费单 -->
+        <div class="payment-card">
+          <div class="pay-header">
+            <div class="pay-icon">💳</div>
+            <div class="pay-title">医生问诊诊费单</div>
+          </div>
+          <div class="pay-body">
+            <div class="pay-item">
+              <span class="pay-label">问诊医生</span>
+              <span class="pay-value">李明 · 主治医师</span>
+            </div>
+            <div class="pay-item">
+              <span class="pay-label">服务类型</span>
+              <span class="pay-value">图文问诊（实时）</span>
+            </div>
+            <div class="pay-item">
+              <span class="pay-label">服务时长</span>
+              <span class="pay-value">15分钟</span>
+            </div>
+            <div class="pay-divider"></div>
+            <div class="pay-item">
+              <span class="pay-label">诊费</span>
+              <span class="pay-value price">¥29.00</span>
+            </div>
+            <div class="pay-note">💡 支付后医生将在5分钟内接入对话。问诊不满意可申请退款。</div>
+          </div>
+          <div class="pay-footer">
+            <div class="pay-guarantee">🛡️ 不满意可退</div>
+            <button class="pay-btn">立即支付 ¥29</button>
+          </div>
+        </div>
+        <div class="msg-time">14:30</div>
+      </div>
+    </div>
+
+  </div>
+  <div class="input-area">
+    <textarea class="input-field" placeholder="输入消息..." rows="1"></textarea>
+    <button class="input-btn attach">📎</button>
+    <button class="input-btn send">↑</button>
+  </div>
+  <div class="home-indicator"><div class="bar"></div></div>
+</div>
+
+<!-- ===== Step 2: 支付成功 + 等待 + 预问诊 ===== -->
+<div class="phone-frame">
+  <div class="status-bar">
+    <span class="time">14:31</span>
+    <span class="icons">📶 📡 🔋</span>
+  </div>
+  <div class="top-nav">
+    <div class="back-btn">←</div>
+    <div class="room-info">
+      <div class="room-name">张医生咨询室</div>
+      <div class="room-status">等待医生接入</div>
+    </div>
+    <div class="more-btn">⋯</div>
+  </div>
+  <div class="team-banner">
+    <div class="team-avatars">
+      <div class="avatar lead">张</div>
+      <div class="avatar member">李</div>
+      <div class="avatar member">王</div>
+      <div class="avatar ai">AI</div>
+    </div>
+    <div class="team-info">
+      <strong>李明医生</strong> 即将接入<br>
+      AI助手正在帮您准备
+    </div>
+  </div>
+  <div class="chat-area">
+    <div class="system-msg success">✓ 支付成功 · ¥29.00 · 14:31</div>
+
+    <div class="message from-ai">
+      <div class="msg-avatar ai">AI</div>
+      <div class="msg-content">
+        <div class="msg-sender ai">医疗AI助手</div>
+        <div class="msg-bubble">
+          支付成功！李明医生预计3分钟内接入。等待期间，我帮您提前准备一下，这样医生接入后可以更快进入正题。
+        </div>
+        <!-- 等待卡片 -->
+        <div class="waiting-card">
+          <div class="waiting-icon">🩺</div>
+          <div class="waiting-title">等待李明医生接入</div>
+          <div class="waiting-desc">医生正在处理上一位患者<br>预计很快为您服务</div>
+          <div class="waiting-progress">
+            <div class="progress-bar"><div class="progress-fill"></div></div>
+            <span class="progress-text">约 2-3 分钟</span>
+          </div>
+        </div>
+        <div class="msg-time">14:31</div>
+      </div>
+    </div>
+
+    <!-- 预问诊引导 -->
+    <div class="message from-ai">
+      <div class="msg-avatar ai">AI</div>
+      <div class="msg-content">
+        <div class="msg-sender ai">医疗AI助手</div>
+        <div class="msg-bubble">
+          趁等待的时间，帮您补充一下相关情况：
+        </div>
+        <div class="questionnaire-card">
+          <div class="q-header">📋 补充您的情况</div>
+          <div class="q-progress">
+            <div class="q-progress-bar"><div class="q-progress-fill" style="width: 50%"></div></div>
+            <div class="q-progress-text">2 / 4</div>
+          </div>
+          <div class="q-question">上次停药后，症状有没有加重？</div>
+          <div class="q-options">
+            <div class="q-option selected">停药后明显加重</div>
+            <div class="q-option">差不多，没什么变化</div>
+            <div class="q-option">有点反复，时好时坏</div>
+          </div>
+          <div class="q-footer">
+            <button class="q-next-btn">下一题 →</button>
+          </div>
+        </div>
+        <div class="msg-time">14:32</div>
+      </div>
+    </div>
+
+  </div>
+  <div class="input-area">
+    <textarea class="input-field" placeholder="输入消息..." rows="1"></textarea>
+    <button class="input-btn attach">📎</button>
+    <button class="input-btn send">↑</button>
+  </div>
+  <div class="home-indicator"><div class="bar"></div></div>
+</div>
+</div><!-- end screen-row -->
+
+<div class="flow-arrow">↓</div>
+
+<!-- ===== Step 3: 医生接入 + IM 对话 ===== -->
+<div class="flow-label">Step 2 · 医生接入 — 点击对话卡片 → 2/3 屏 IM 窗口</div>
+<div class="screen-row">
+
+<!-- 医生接入通知 -->
+<div class="phone-frame">
+  <div class="status-bar">
+    <span class="time">14:34</span>
+    <span class="icons">📶 📡 🔋</span>
+  </div>
+  <div class="top-nav">
+    <div class="back-btn">←</div>
+    <div class="room-info">
+      <div class="room-name">张医生咨询室</div>
+      <div class="room-status">李医生已接入</div>
+    </div>
+    <div class="more-btn">⋯</div>
+  </div>
+  <div class="team-banner">
+    <div class="team-avatars">
+      <div class="avatar lead">张</div>
+      <div class="avatar member" style="border-color: var(--medical-green);">李</div>
+      <div class="avatar member">王</div>
+      <div class="avatar ai">AI</div>
+    </div>
+    <div class="team-info">
+      <strong>李明医生</strong> 已接入，等待开始对话<br>
+      剩余时长 15:00
+    </div>
+  </div>
+  <div class="chat-area">
+    <div class="system-msg success">✓ 李明医生已接入 · 14:34</div>
+
+    <div class="message from-ai">
+      <div class="msg-avatar ai">AI</div>
+      <div class="msg-content">
+        <div class="msg-sender ai">医疗AI助手</div>
+        <div class="msg-bubble">
+          李明医生已准备好！我已将您补充的情况同步给医生。点击下方卡片开始对话：
+        </div>
+        <!-- 医生对话卡片 -->
+        <div class="doctor-ready-card">
+          <div class="drc-badge">● 医生已就绪</div>
+          <div class="drc-doctor">
+            <div class="drc-avatar">李</div>
+            <div>
+              <div class="drc-name">李明 主治医师</div>
+              <div class="drc-title">消化内科 · 10年临床经验</div>
+            </div>
+          </div>
+          <div class="drc-action">💬 开始与医生对话</div>
+          <div class="drc-hint">点击开启实时图文问诊 · 剩余15分钟</div>
+        </div>
+        <div class="msg-time">14:34</div>
+      </div>
+    </div>
+  </div>
+  <div class="input-area">
+    <textarea class="input-field" placeholder="输入消息..." rows="1"></textarea>
+    <button class="input-btn attach">📎</button>
+    <button class="input-btn send">↑</button>
+  </div>
+  <div class="home-indicator"><div class="bar"></div></div>
+</div>
+
+<!-- IM 2/3 弹窗 -->
+<div class="phone-frame">
+  <div class="status-bar">
+    <span class="time">14:36</span>
+    <span class="icons">📶 📡 🔋</span>
+  </div>
+  <div class="top-nav" style="opacity: 0.5;">
+    <div class="back-btn">←</div>
+    <div class="room-info">
+      <div class="room-name">张医生咨询室</div>
+      <div class="room-status">问诊中 · 12:38</div>
+    </div>
+    <div class="more-btn">⋯</div>
+  </div>
+  <!-- Dimmed background -->
+  <div class="dimmed-bg"></div>
+  <!-- IM Overlay -->
+  <div class="im-overlay">
+    <div class="im-handle"></div>
+    <div class="im-header">
+      <div class="im-avatar">李</div>
+      <div style="flex:1">
+        <div class="im-name">李明医生</div>
+        <div class="im-status">● 在线 · 剩余 12:38</div>
+      </div>
+      <div class="im-close">✕</div>
+    </div>
+    <div class="im-chat">
+      <div class="im-msg doctor">
+        您好，我已看过您的情况。您提到停药后症状加重，具体是哪种不适更明显？是反酸还是腹痛？
+        <div class="im-time">14:35</div>
+      </div>
+      <div class="im-msg user">
+        主要是反酸加重了，特别是晚上躺下的时候，有时候会反到嗓子里
+        <div class="im-time" style="color:rgba(255,255,255,0.6)">14:35</div>
+      </div>
+      <div class="im-msg doctor">
+        夜间反流比较明显，这提示可能存在胃食管反流病(GERD)。有几个建议：<br><br>1. 睡前2-3小时不要进食<br>2. 床头垫高15-20cm<br>3. 我给您开一个短程PPI+促动力药的方案
+        <div class="im-time">14:36</div>
+      </div>
+      <div class="im-msg user">
+        好的医生，那奥美拉唑还能继续吃吗？需要吃多久？
+        <div class="im-time" style="color:rgba(255,255,255,0.6)">14:37</div>
+      </div>
+      <div class="im-msg doctor">
+        可以的，但是规范用法是每天早餐前30分钟一粒（20mg），疗程4周后复查。不建议超过8周，更不是网上说的6个月。4周后我们再评估。
+        <div class="im-time">14:37</div>
+      </div>
+    </div>
+    <div class="im-input-bar">
+      <input class="im-input" placeholder="输入消息...">
+      <button class="im-send">↑</button>
+    </div>
+  </div>
+  <div class="home-indicator" style="z-index:101;background:white;"><div class="bar"></div></div>
+</div>
+
+</div><!-- end screen-row -->
+
+<div class="flow-arrow">↓</div>
+
+<!-- ===== Step 4: 对话结束 + 小结 + 处方 ===== -->
+<div class="flow-label">Step 3 · 对话结束 — AI 小结 + 处方单</div>
+<div class="screen-row">
+<div class="phone-frame">
+  <div class="status-bar">
+    <span class="time">14:46</span>
+    <span class="icons">📶 📡 🔋</span>
+  </div>
+  <div class="top-nav">
+    <div class="back-btn">←</div>
+    <div class="room-info">
+      <div class="room-name">张医生咨询室</div>
+      <div class="room-status">问诊已结束</div>
+    </div>
+    <div class="more-btn">⋯</div>
+  </div>
+  <div class="team-banner">
+    <div class="team-avatars">
+      <div class="avatar lead">张</div>
+      <div class="avatar member">李</div>
+      <div class="avatar member">王</div>
+      <div class="avatar ai">AI</div>
+    </div>
+    <div class="team-info">
+      <strong>本次问诊已结束</strong><br>
+      李明医生已为您开具处方
+    </div>
+  </div>
+  <div class="chat-area">
+
+    <div class="end-session">问诊结束 · 对话时长 12分钟 · 14:46</div>
+
+    <!-- AI 小结 -->
+    <div class="message from-ai">
+      <div class="msg-avatar ai">AI</div>
+      <div class="msg-content">
+        <div class="msg-sender ai">医疗AI助手</div>
+        <div class="msg-bubble">
+          问诊已结束，以下是本次就诊小结：
+        </div>
+        <div class="summary-card">
+          <div class="sum-header">
+            <span class="sum-icon">📝</span>
+            <span class="sum-title">就诊小结</span>
+          </div>
+          <div class="sum-body">
+            <div class="sum-section">
+              <div class="sum-label">初步诊断</div>
+              <div class="sum-text">胃食管反流病（GERD），考虑与之前停用PPI后症状反弹有关</div>
+            </div>
+            <div class="sum-section">
+              <div class="sum-label">主要症状</div>
+              <div class="sum-text">餐后反酸、夜间反流至咽喉、上腹隐痛</div>
+            </div>
+            <div class="sum-section">
+              <div class="sum-label">医生建议</div>
+              <div class="sum-text">
+                1. 规范PPI用药4周（早餐前30分钟服用）<br>
+                2. 联合促动力药改善症状<br>
+                3. 睡前3小时禁食，床头抬高15-20cm<br>
+                4. 4周后复查，评估是否需要继续用药
+              </div>
+            </div>
+            <div class="sum-section">
+              <div class="sum-label">复查提醒</div>
+              <div class="sum-text">4周后（约8月6日）需复诊评估</div>
+            </div>
+          </div>
+        </div>
+        <div class="msg-time">14:46</div>
+      </div>
+    </div>
+
+    <!-- 处方单 -->
+    <div class="message from-ai">
+      <div class="msg-avatar ai">AI</div>
+      <div class="msg-content">
+        <div class="msg-sender ai">医疗AI助手</div>
+        <div class="msg-bubble">
+          李医生已为您开具处方，确认后可直接购药：
+        </div>
+        <div class="rx-card">
+          <div class="rx-header">
+            <span class="rx-icon">💊</span>
+            <span class="rx-title">电子处方</span>
+            <span class="rx-badge">李明医生开具</span>
+          </div>
+          <div class="rx-body">
+            <div class="rx-item">
+              <div class="rx-num">1</div>
+              <div>
+                <div class="rx-drug-name">奥美拉唑肠溶胶囊 20mg</div>
+                <div class="rx-drug-dose">每日1次 · 早餐前30分钟 · 28天</div>
+              </div>
+            </div>
+            <div class="rx-item">
+              <div class="rx-num">2</div>
+              <div>
+                <div class="rx-drug-name">莫沙必利片 5mg</div>
+                <div class="rx-drug-dose">每日3次 · 餐前15分钟 · 14天</div>
+              </div>
+            </div>
+            <div class="rx-item">
+              <div class="rx-num">3</div>
+              <div>
+                <div class="rx-drug-name">铝碳酸镁咀嚼片 0.5g</div>
+                <div class="rx-drug-dose">症状明显时嚼服 · 按需使用</div>
+              </div>
+            </div>
+          </div>
+          <div class="rx-footer">
+            <div class="rx-total">
+              合计 <span class="rx-price">¥86.50</span>
+            </div>
+            <button class="rx-pay-btn">💳 支付购药</button>
+          </div>
+        </div>
+        <div class="msg-time">14:47</div>
+      </div>
+    </div>
+
+    <!-- 后续引导 -->
+    <div class="message from-ai">
+      <div class="msg-avatar ai">AI</div>
+      <div class="msg-content">
+        <div class="msg-sender ai">医疗AI助手</div>
+        <div class="msg-bubble">
+          如有用药问题随时在咨询室提问，我会为您解答。4周后我会提醒您复诊。
+        </div>
+        <div class="quick-replies">
+          <span class="quick-reply">支付购药</span>
+          <span class="quick-reply">用药注意事项</span>
+          <span class="quick-reply">设置复诊提醒</span>
+        </div>
+        <div class="msg-time">14:47</div>
+      </div>
+    </div>
+
+  </div>
+  <div class="input-area">
+    <textarea class="input-field" placeholder="输入消息..." rows="1"></textarea>
+    <button class="input-btn attach">📎</button>
+    <button class="input-btn send">↑</button>
+  </div>
+  <div class="home-indicator"><div class="bar"></div></div>
+</div>
+</div><!-- end screen-row -->
+
+</div><!-- end screens-container -->
+
+</body>
+</html>
