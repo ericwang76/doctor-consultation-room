@@ -271,22 +271,60 @@ main{max-width:1200px; margin:0 auto; padding:26px 22px 10px;}
 .bubble.urgent{background:#fdeeea; border:1px solid #f3cfc8;}
 .bubble.urgent .txt{color:#7c2d26;} .bubble.urgent .txt strong{color:#b3261d;}
 
-/* 医生端历史弱化 */
-.dc-view .row.hist .bubble{opacity:.72;}
-.dc-view .row.hist .bubble.a{opacity:.6;}
+/* 医生端历史：患者与医生助理均为已发生的对话，使用同一弱化样式 */
+.dc-view .row.hist .bubble.p,
+.dc-view .row.hist .bubble.a{
+  opacity:.62; background:#fff; border:1px solid var(--hairline);
+  border-radius:14px 14px 14px 4px; box-shadow:0 1px 2px rgba(20,20,19,.04);
+}
+.dc-view .row.hist .bubble.p .who,
+.dc-view .row.hist .bubble.a .who{color:var(--muted-soft);}
+.dc-view .row.hist .bubble.p .txt,
+.dc-view .row.hist .bubble.a .txt{color:var(--muted);}
+.dc-view .row.hist .bubble.p .txt strong,
+.dc-view .row.hist .bubble.a .txt strong{color:var(--ink);}
 
-/* 系统提示（浅色灰胶囊） */
+/* 系统提示：所有状态统一为低强调中性样式 */
 .sys{text-align:center; margin:10px auto; max-width:94%;}
-.sys span{
-  display:inline-block; background:#eae5da; color:#7a746a; font-size:11px;
-  padding:4px 12px; border-radius:12px; line-height:1.55; border:1px solid #ded7c9;
+.sys span,
+.sys.run span,
+.sys.pay span,
+.sys.done span,
+.sys.summary span{
+  display:inline-block; background:#eae5da; color:#7a746a; font:11px/1.6 var(--sans);
+  padding:4px 12px; border-radius:12px; border:1px solid #ded7c9;
 }
-.sys.run span{
-  font-family:var(--mono); font-size:10.5px; color:#8a6d4f;
-  background:#f1ece2; border:1px dashed #d8c9b2;
+.sys.summary{margin:10px auto; max-width:94%;}
+.sys.summary span{text-align:left; padding:8px 12px;}
+.sys.summary strong{color:#5e5951; font-weight:600;}
+.summary-feedback{color:var(--primary); text-decoration:underline; text-underline-offset:2px;}
+.summary-feedback:hover{color:var(--primary-active);}
+
+/* Copilot 候选回复：暖编辑式操作模块，珊瑚色仅指向发送动作 */
+.copilot{
+  display:none; width:94%; margin:10px auto; padding:12px;
+  background:var(--canvas); border:1px solid #d8cfc2; border-radius:var(--r-md);
+  box-shadow:0 6px 18px -14px rgba(20,20,19,.45);
 }
-.sys.pay span{background:#f7e8da; color:#9a5f2e; border:1px solid #e6c9a8;}
-.sys.done span{background:#e4f2e8; color:#2f7a53; border:1px solid #bcd9c6;}
+.copilot.show{display:block;}
+.copilot-head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px;}
+.copilot-title{font-family:var(--serif); font-size:15px; line-height:1.2; font-weight:600; color:var(--ink);}
+.copilot-note{font-size:9.5px; line-height:1.35; color:var(--muted-soft); text-align:right;}
+.copilot-list{display:grid; gap:7px;}
+.copilot-option{
+  width:100%; display:grid; grid-template-columns:22px minmax(0,1fr) auto; align-items:start; gap:7px;
+  border:1px solid var(--hairline); border-radius:var(--r-sm); background:#fff; color:var(--body);
+  padding:9px 10px; text-align:left; font:11.5px/1.5 var(--sans); cursor:pointer;
+  transition:border-color .15s, background .15s, box-shadow .15s, transform .1s;
+}
+.copilot-num{font-family:var(--serif); font-size:13px; font-weight:600; color:var(--muted-soft);}
+.copilot-send{align-self:center; color:var(--primary); font-size:10.5px; font-weight:600; white-space:nowrap;}
+.copilot-option:hover{border-color:var(--primary); background:#fffaf6; box-shadow:0 2px 8px -5px rgba(169,88,62,.5);}
+.copilot-option.selected{border-color:var(--primary); background:#fff7f2; box-shadow:0 0 0 2px rgba(204,120,92,.12);}
+.copilot-option.selected .copilot-num{color:var(--primary);}
+.copilot-option:focus-visible{outline:3px solid rgba(204,120,92,.2); outline-offset:1px;}
+.copilot-option:active{transform:translateY(1px);}
+.copilot.used{display:none;}
 
 /* 问诊卡（奶油卡片） */
 .card{
@@ -441,6 +479,71 @@ function splitCard(text){
   cardRaw = cardRaw.replace(/[。；]\s*$/,"").replace(/[）)]\s*$/,"").trim();
   return {pre, cardRaw, tail};
 }
+function metaValue(meta, key){
+  const m = meta.match(new RegExp(key+"=([^｜]+)"));
+  return m ? m[1].replace(/^"|"$/g, "") : "";
+}
+function plainText(text){
+  return String(text).replace(/\*\*/g, "").replace(/\n+/g, " ").replace(/【医生问诊卡】[\s\S]*$/, "").trim();
+}
+function shorten(text, max){
+  text = plainText(text);
+  return text.length > max ? text.slice(0, max-1)+"…" : text;
+}
+function caseDigest(c){
+  const run = c.msgs.find(m=>m[0] === "run" && m[1].indexOf("小结") >= 0);
+  const summaryM = run && run[1].match(/小结v?\d*\(([^)]+)\)/);
+  const patients = c.msgs.filter(m=>m[0] === "patient").map(m=>plainText(m[1]));
+  const agentText = c.msgs.filter(m=>m[0] === "agent").map(m=>m[1]).join("\n");
+  const taskM = agentText.match(/\*{0,2}需要医生做的事\*{0,2}[：:]\s*([\s\S]*?)(?=我为您准备|【医生问诊卡】|\n(?:如果|提醒|您先|在这之前)|$)/);
+  const outcome = plainText(c.outcome).replace(/^收尾：/, "");
+  const autoM = outcome.match(/^自主回答[（(]([^）)]+)[）)]/);
+  const assistantWork = c.type === "paid"
+    ? "已完成关键信息采集和初步判断，向患者解释风险与处置方向，并发起付费问诊。"
+    : "已自主完成"+(autoM ? autoM[1].replace(/[＋+]/g, "、") : "问题解答和风险判断")+"，并给出后续观察与就医提示。";
+  const follow = outcome.split("；").slice(1).join("；").replace(/[。；]+$/, "");
+  const doctorWork = taskM
+    ? plainText(taskM[1]).replace(/[。；]+$/, "")
+    : c.type === "paid"
+      ? "结合完整资料，对“"+(metaValue(c.meta, "需求") || c.title)+"”作出医生判断并确定后续方案"
+      : follow
+        ? "达到相应条件时介入处理："+follow
+        : "当前无需立即介入；患者情况变化或无法按建议改善时再评估";
+  return {
+    need: metaValue(c.meta, "需求") || c.title,
+    facts: summaryM ? summaryM[1].replace(/\//g, "、") : shorten(patients.join("；"), 90),
+    latest: patients[patients.length-1] || "",
+    assistantWork,
+    doctorWork
+  };
+}
+function summaryHTML(c){
+  const s = caseDigest(c);
+  const base = "**对话小结**\n主诉："+s.need+"\n关键信息："+s.facts+"\n助理已完成："+s.assistantWork+"\n医生待处理：";
+  if(c.type === "auto"){
+    return '<div class="sys summary"><span>'+fmt(base)+'若医生助理对话有误，<a class="summary-feedback" href="#feedback" onclick="event.preventDefault()">请反馈我们</a></span></div>';
+  }
+  return sysHTML(base+s.doctorWork, "sys summary");
+}
+function copilotCandidates(c){
+  const s = caseDigest(c);
+  const doctor = c.msgs.find(m=>m[0] === "doctor");
+  const direct = doctor ? plainText(doctor[1]) : "我已查看您的病情资料。结合目前信息，建议先按上述方案处理，并根据症状变化及复查结果进一步评估。";
+  return [
+    direct,
+    "我已查看前面的问诊记录。结合现有信息（"+s.facts+"），目前需要围绕“"+s.need+"”进一步判断。请补充相关检查报告原图、既往诊疗经过，以及近期是否出现新的症状，我会据此评估下一步检查或治疗方案。",
+    "从目前资料看，尚不能仅凭单项信息作出最终判断。建议先按前述注意事项处理并观察变化，按计划完成复查；如症状加重或出现新的异常，请及时就医，并将最新检查结果发来复评。"
+  ];
+}
+function copilotHTML(c, candidates){
+  if(c.type !== "paid") return "";
+  return '<div class="copilot" id="copilot-'+c.id+'">'+
+    '<div class="copilot-head"><span class="copilot-title">Copilot · 建议回复</span><span class="copilot-note">基于当前上下文生成<br>点击填入输入框，可编辑后发送</span></div>'+
+    '<div class="copilot-list">'+candidates.map((text, i)=>
+      '<button class="copilot-option" onclick="sendCandidate(\''+c.id+'\','+i+',this)">'+
+        '<span class="copilot-num">0'+(i+1)+'</span><span>'+esc(text)+'</span><span class="copilot-send">填入 ↓</span></button>'
+    ).join("")+'</div></div>';
+}
 
 /* ================= 消息渲染 ================= */
 function sysHTML(text, cls){
@@ -507,11 +610,13 @@ function chatHTML(c){
     }else if(role === "welcome" || role === "agent"){
       const card = splitCard(text);
       if(card && !cardDone){
-        p += rowHTML("a", card.pre, {view:"patient"});
-        p += cardHTML(c, card.cardRaw, "patient");
-        if(card.tail) p += rowHTML("a", card.tail, {view:"patient"});
+        p += rowHTML("a", card.pre, {view:"patient", urgent:c.type === "urgent"});
         d += rowHTML("a", card.pre, {view:"doctor"});
-        d += cardHTML(c, card.cardRaw, "doctor");
+        if(!c.noCard && c.type !== "urgent"){
+          p += cardHTML(c, card.cardRaw, "patient");
+          d += cardHTML(c, card.cardRaw, "doctor");
+        }
+        if(card.tail) p += rowHTML("a", card.tail, {view:"patient", urgent:c.type === "urgent"});
         if(card.tail) d += rowHTML("a", card.tail, {view:"doctor"});
         cardDone = true;
       }else{
@@ -520,6 +625,7 @@ function chatHTML(c){
       }
     }
   }
+  if(c.type === "auto") d += summaryHTML(c);
   return {p, d, doctor:w.doctor};
 }
 
@@ -527,6 +633,7 @@ function chatHTML(c){
 function buildCase(c){
   const w = parseWindow(winOf(c));
   const {p, d, doctor} = chatHTML(c);
+  const candidates = copilotCandidates(c);
   const tlabel = TYPE_LABEL[c.type] || "";
   const typeChip = '<span class="type-chip '+c.type+'">'+tlabel+'</span>';
 
@@ -576,7 +683,7 @@ function buildCase(c){
             '<div class="hd-sub">'+esc((w.hospital||"")+(w.dept?" · "+w.dept:""))+' · 工作台</div></div>'+
             payChip+
           '</div>'+
-          '<div class="chat dc-view" id="chat-'+c.id+'-d"><div class="scroll-hint"><span>↕ 医生可查看患者 × 医生助理历史对话</span></div>'+d+'</div>'+
+          '<div class="chat dc-view" id="chat-'+c.id+'-d"><div class="scroll-hint"><span>↕ 医生可查看患者 × 医生助理历史对话</span></div>'+d+copilotHTML(c, candidates)+'</div>'+
           '<div class="inputbar">'+
             '<input id="inp-'+c.id+'" type="text" placeholder="'+esc(docPlaceholder)+'" disabled>'+
             '<button id="send-'+c.id+'" disabled onclick="send(\''+c.id+'\')">发送</button>'+
@@ -586,8 +693,7 @@ function buildCase(c){
     '</div>';
 
   const pc = sec.querySelector("#chat-"+c.id+"-p"), dc = sec.querySelector("#chat-"+c.id+"-d");
-  const lastP = pc.lastElementChild, lastD = dc.lastElementChild;
-  state[c.id] = {paid:false, lastP, lastD, doctor:w.doctor};
+  state[c.id] = {paid:false, lastP:null, lastD:null, doctor:w.doctor, candidates};
   const inp = sec.querySelector("#inp-"+c.id);
   inp.addEventListener("keydown", ev=>{ if(ev.key === "Enter") send(c.id); });
   return sec;
@@ -628,36 +734,20 @@ function pay(id, btn){
   insertBeforeEl(pChat, sysHTML("✅ 支付成功：问诊卡已激活，"+st.doctor+" 医生已接入。", "sys done"), st.lastP);
   insertBeforeEl(dChat, sysHTML("🔔 患者已完成付费购买问诊，医生已接入，可开始回复（回复同步展示在患者端）。", "sys done"), st.lastD);
 
-  const docMsgs = c.msgs.filter(m=>m[0]==="doctor");
   const hint = document.getElementById("hint-"+id);
   const inp = document.getElementById("inp-"+id), snd = document.getElementById("send-"+id);
-
-  const finish = ()=>{
-    if(hint) hint.textContent = "✅ 已付费 · 医生已接入（本端只读回放）";
-    if(inp && snd && c.type !== "urgent"){
-      inp.disabled = false; snd.disabled = false;
-      inp.placeholder = "输入回复内容，回车发送（同步到患者端）…";
-      setTimeout(()=>inp.focus(), 60);
+  if(hint) hint.textContent = "✅ 已付费 · 医生已接入（本端只读回放）";
+  if(inp && snd && c.type !== "urgent"){
+    inp.disabled = false; snd.disabled = false;
+    inp.placeholder = "输入回复内容，回车发送（同步到患者端）…";
+  }
+  if(c.type === "paid"){
+    const copilot = document.getElementById("copilot-"+id);
+    insertBeforeEl(dChat, summaryHTML(c), st.lastD);
+    if(copilot){
+      dChat.appendChild(copilot);
+      copilot.classList.add("show");
     }
-  };
-
-  if(docMsgs.length){
-    // 打字指示 → 稍后接入医生回复
-    insertBeforeEl(pChat, typingRow("patient"), st.lastP);
-    insertBeforeEl(dChat, typingRow("doctor"), st.lastD);
-    scrollBottom(pChat); scrollBottom(dChat);
-    const t1 = pChat.querySelector(".typing"), t2 = dChat.querySelector(".typing");
-    setTimeout(()=>{
-      if(t1) t1.remove(); if(t2) t2.remove();
-      docMsgs.forEach(m=>{
-        insertBeforeEl(pChat, rowHTML("d", m[1], {view:"patient", doctor:st.doctor, newCls:true}), st.lastP);
-        insertBeforeEl(dChat, rowHTML("d", m[1], {view:"doctor", doctor:st.doctor, post:true, newCls:true}), st.lastD);
-      });
-      scrollBottom(pChat); scrollBottom(dChat);
-      finish();
-    }, 950);
-  }else{
-    finish();
   }
   scrollBottom(pChat); scrollBottom(dChat);
 }
@@ -672,12 +762,35 @@ function send(id){
   const dChat = document.getElementById("chat-"+id+"-d");
   insertBeforeEl(pChat, rowHTML("d", txt, {view:"patient", doctor:st.doctor, newCls:true}), st.lastP);
   insertBeforeEl(dChat, rowHTML("d", txt, {view:"doctor", doctor:st.doctor, post:true, newCls:true}), st.lastD);
+  const copilot = document.getElementById("copilot-"+id);
+  if(copilot) copilot.classList.add("used");
   scrollBottom(pChat); scrollBottom(dChat);
+}
+function sendCandidate(id, index, btn){
+  const st = state[id];
+  if(!st || !st.paid || !st.candidates[index]) return;
+  const inp = document.getElementById("inp-"+id);
+  inp.value = st.candidates[index];
+  const copilot = document.getElementById("copilot-"+id);
+  if(copilot){
+    copilot.querySelectorAll(".copilot-option").forEach(option=>{
+      option.classList.remove("selected");
+      const action = option.querySelector(".copilot-send");
+      if(action) action.textContent = "填入 ↓";
+    });
+  }
+  if(btn){
+    btn.classList.add("selected");
+    const action = btn.querySelector(".copilot-send");
+    if(action) action.textContent = "已填入";
+  }
+  inp.focus();
+  inp.setSelectionRange(inp.value.length, inp.value.length);
 }
 
 function payAll(){
   CASES.forEach(c=>{
-    if(c.type === "urgent" || c.noCard) return;
+    if(c.type !== "paid" || c.noCard) return;
     pay(c.id, null);
   });
 }
